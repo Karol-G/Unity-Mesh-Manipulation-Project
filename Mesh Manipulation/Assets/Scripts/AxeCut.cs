@@ -53,7 +53,7 @@ public class AxeCut : MonoBehaviour {
     private void doAxeCut(GameObject selectedGameObject) {
         bool convexSlicer = false;
         GameObject[] hull1 = objectSlicer.sliceGameObject(selectedGameObject, getSlicerPlanePosition(cuttingWidth/2), -cuttingAngle, convexSlicer);
-        //Destroy(selectedGameObject);//
+        Destroy(selectedGameObject);//
         objectSlicer.addMeshColliderToGameObject(hull1[0]);            
         GameObject[] hull2 = objectSlicer.sliceGameObject(hull1[0], getSlicerPlanePosition(-cuttingWidth/2), cuttingAngle, convexSlicer);
         Destroy(hull1[0]);
