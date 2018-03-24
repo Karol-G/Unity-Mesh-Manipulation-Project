@@ -46,23 +46,25 @@ public class ObjectSlicer : MonoBehaviour {
         GameObject parent;
         GameObject[] hull;
         foreach (GameObject selectedGameObject in selectedGameObjectList) {
-            print("selectedGameObject: " + selectedGameObject);
-            parent = new GameObject(selectedGameObject.name);
-            parent.transform.position = selectedGameObject.transform.position;
-            parent.transform.parent = selectedGameObject.transform.parent;            
+            print("selectedGameObject: " + selectedGameObject);           
             hull = sliceGameObject(selectedGameObject, this.transform.position, 0);
-            Destroy(selectedGameObject);
-            addMeshColliderToGameObjectDelayed(hull[0]);
-            addMeshColliderToGameObjectDelayed(hull[1]);            
-            hull[0].transform.parent = parent.transform;
-            hull[1].transform.parent = parent.transform;
-            hull[0].transform.localPosition = Vector3.zero;
-            hull[1].transform.localPosition = Vector3.zero;
-            // Only root should have a rigidbody
-            if (parent.transform.parent == null)
-            {
-                addRigidbodyToGameObjectDelayed(parent);
-            }
+            if (hull != null) {
+                parent = new GameObject(selectedGameObject.name);
+                parent.transform.position = selectedGameObject.transform.position;
+                parent.transform.parent = selectedGameObject.transform.parent;
+                Destroy(selectedGameObject);
+                addMeshColliderToGameObjectDelayed(hull[0]);
+                addMeshColliderToGameObjectDelayed(hull[1]);
+                hull[0].transform.parent = parent.transform;
+                hull[1].transform.parent = parent.transform;
+                hull[0].transform.localPosition = Vector3.zero;
+                hull[1].transform.localPosition = Vector3.zero;
+                // Only root should have a rigidbody
+                if (parent.transform.parent == null)
+                {
+                    addRigidbodyToGameObjectDelayed(parent);
+                }
+            }            
         }
     }
 
