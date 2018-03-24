@@ -25,17 +25,8 @@ public class ObjectSlicer : MonoBehaviour {
             //GameObject selectedGameObject = getSelectedObject();
 
             if (selectedGameObjects != null) {
-                sliceSelectedGameObject1(selectedGameObjects);
+                sliceSelectedGameObjectCombined(selectedGameObjects);
                 //sliceSelectedGameObjectConvex(selectedGameObject);
-            }
-        }
-        if (Input.GetMouseButtonDown(2))
-        {
-            GameObject selectedGameObject = getSelectedObject();
-
-            if (selectedGameObject != null)
-            {
-                sliceSelectedGameObjectConvex(selectedGameObject);
             }
         }
     }   
@@ -50,25 +41,7 @@ public class ObjectSlicer : MonoBehaviour {
 		 return null;
 	}
 
-    public void sliceSelectedGameObject(GameObject selectedGameObject, bool convexSlicer = true, bool childSlicer = false) {
-        if (convexSlicer) {
-            sliceSelectedGameObjectConvex(selectedGameObject);
-        }
-        else {
-            sliceSelectedGameObjectNonConvex(selectedGameObject);
-        }
-    }
-
-    private void sliceSelectedGameObjectConvex(GameObject selectedGameObject) {
-        GameObject[] hull = sliceGameObject(selectedGameObject, this.transform.position, 0);       
-        Destroy(selectedGameObject);
-        addMeshColliderToGameObjectDelayed(hull[0]);
-        addMeshColliderToGameObjectDelayed(hull[1]);
-        addRigidbodyToGameObjectDelayed(hull[0]);
-        addRigidbodyToGameObjectDelayed(hull[1]);
-    }
-
-    private void sliceSelectedGameObject1(List<GameObject> selectedGameObjectList)
+    private void sliceSelectedGameObjectCombined(List<GameObject> selectedGameObjectList)
     {
         GameObject parent;
         GameObject[] hull;
@@ -93,7 +66,7 @@ public class ObjectSlicer : MonoBehaviour {
         }
     }
 
-    private void sliceSelectedGameObject2(List<GameObject> selectedGameObjectList)
+    private void sliceSelectedGameObjectNonCombined(List<GameObject> selectedGameObjectList)
     {
         // Es müssen zwei neue roots erstellt werden, der alte muss gelöscht werden (Es wird kompliziert mit den verschiedenen Children die einem neuen root zuzuordnen)
         GameObject root;
@@ -113,24 +86,7 @@ public class ObjectSlicer : MonoBehaviour {
         }
     }
 
-    private void sliceSelectedGameObjectNonConvex(GameObject selectedGameObject) {
-        GameObject[] hull = BLINDED_AM_ME.MeshCut.Cut(selectedGameObject, transform.position, slicerAngle.getTransformRight(), capMaterial);
-        addMeshColliderToGameObjectDelayed(hull[0]);
-        addMeshColliderToGameObjectDelayed(hull[1]);
-        addRigidbodyToGameObjectDelayed(hull[0]);
-        addRigidbodyToGameObjectDelayed(hull[1]);
-    }
-
-    public GameObject[] sliceGameObject(GameObject gameObjectToSlice, Vector3 position, float rotationAngle, bool convexSlicer = true) {
-        if (convexSlicer) {
-            return sliceGameObjectConvex(gameObjectToSlice, position, rotationAngle);
-        }
-        else {
-            return sliceGameObjectNonConvex(gameObjectToSlice, position, rotationAngle);
-        }
-    }
-
-    public GameObject[] sliceGameObjectConvex(GameObject gameObjectToSlice, Vector3 position, float rotationAngle) {
+    public GameObject[] sliceGameObject(GameObject gameObjectToSlice, Vector3 position, float rotationAngle) {
         GameObject slicerPlane = Instantiate(Resources.Load("SlicerPlanePrefab"), position, Quaternion.identity) as GameObject;
         slicerPlane.transform.eulerAngles = this.transform.eulerAngles + new Vector3(0, 0, slicerAngle.getSlicerAngle());
         slicerPlane.transform.Rotate(new Vector3(rotationAngle, 0, 0), Space.Self);
@@ -145,26 +101,6 @@ public class ObjectSlicer : MonoBehaviour {
 
         return new GameObject[] {upperHull, lowerHull};
     }
-
-    public GameObject[] sliceGameObjectNonConvex(GameObject gameObjectToSlice, Vector3 position, float rotationAngle) {
-        Vector3 normal = Quaternion.Euler(transform.up * rotationAngle) * slicerAngle.getTransformRight();
-        GameObject[] hull = BLINDED_AM_ME.MeshCut.Cut(gameObjectToSlice, position, normal, capMaterial);
-
-        return hull;
-    }
-
-    /*public void addMeshColliderToGameObject(GameObject gameObject, bool convex = true) {
-        if (gameObject.transform.childCount == 0) {
-            foreach (GameObject child in getFirstChildren(gameObject)) {
-                addMeshColliderToGameObject(child, convex);
-            }
-        }
-        else {
-            Destroy(gameObject.GetComponent<Collider>());
-            MeshCollider meshCollider = gameObject.AddComponent<MeshCollider>() as MeshCollider;
-            meshCollider.convex = convex;
-        }       
-    }*/
 
     public void addMeshColliderToGameObject(GameObject gameObject, bool convex = true)
     {
@@ -205,20 +141,4 @@ public class ObjectSlicer : MonoBehaviour {
         Rigidbody rigidbody = gameObject.AddComponent<Rigidbody>() as Rigidbody;
         rigidbody.useGravity = true;
     }
-
-    /*private GameObject[] getFirstChildren(GameObject parent)
-    {
-        Transform[] children = parent.GetComponentsInChildren<Transform>();
-        GameObject[] firstChildren = new GameObject[parent.transform.childCount];
-        int index = 0;
-        foreach (Transform child in children)
-        {
-            if (child.parent == parent)
-            {
-                firstChildren[index] = child.gameObject;
-                index++;
-            }
-        }
-        return firstChildren;
-    }*/
 }
