@@ -2,8 +2,11 @@
 # Created by https://www.gitignore.io/api/unity
 
 ### Unity ###
-/Library/
-/Temp/
+Unity-Mesh-Manipulation-Project\Mesh Manipulation\Library\
+Unity-Mesh-Manipulation-Project/Mesh Manipulation/Library/
+"Unity-Mesh-Manipulation-Project\Mesh Manipulation\Library\"
+"Unity-Mesh-Manipulation-Project/Mesh Manipulation/Library/"
+EzySlice-Examples/Temp/
 /Obj/
 /Build/
 /Builds/
