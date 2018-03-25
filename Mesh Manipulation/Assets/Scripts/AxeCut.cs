@@ -51,7 +51,7 @@ public class AxeCut : MonoBehaviour {
     }
 
     private void doAxeCut(GameObject selectedGameObject) {
-        GameObject[] hull1 = objectSlicer.sliceGameObject(selectedGameObject, getSlicerPlanePosition(cuttingWidth/2), -cuttingAngle);
+        /*GameObject[] hull1 = objectSlicer.sliceGameObject(selectedGameObject, getSlicerPlanePosition(cuttingWidth/2), -cuttingAngle);
         Destroy(selectedGameObject);//
         objectSlicer.addMeshColliderToGameObject(hull1[0]);            
         GameObject[] hull2 = objectSlicer.sliceGameObject(hull1[0], getSlicerPlanePosition(-cuttingWidth/2), cuttingAngle);
@@ -59,7 +59,7 @@ public class AxeCut : MonoBehaviour {
         hull1[0] = null;
         Destroy(hull2[1]);
         GameObject combinedGameObject = gameObjectCombiner.combineGameObjects(new GameObject[] {hull1[1], hull2[0]}, false);
-        objectSlicer.addMeshColliderToGameObject(combinedGameObject, false);
+        objectSlicer.addMeshColliderToGameObject(combinedGameObject, false);*/
         //objectSlicer.addRigidbodyToGameObject(combinedGameObject);
     }
 

@@ -8,7 +8,7 @@ public class SelecterRaycast : MonoBehaviour {
     public static GameObject getSelectedGameObject(Ray ray) {
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, 100.0f)) {
-            return hit.collider.gameObject;
+            return hit.transform.root.gameObject;
         }
 
         return null;
@@ -19,11 +19,8 @@ public class SelecterRaycast : MonoBehaviour {
         RaycastHit firstHit;
         if (Physics.Raycast(ray, out firstHit, 100.0f))
         {
-            GameObject root = firstHit.transform.root.gameObject;
-            print("Root: " + root.name);
-            
+            GameObject root = firstHit.transform.root.gameObject;            
             foreach (Transform child in root.GetComponentsInChildren<Transform>()) {
-                print("Foreach loop: " + child.name);
                 selectedGameObjects.Add(child.gameObject);
             }
 

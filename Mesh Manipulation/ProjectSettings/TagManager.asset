@@ -3,7 +3,13 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - FL
+  - FR
+  - SL
+  - SR
+  - FL+SL
+  - FL+SR
   layers:
   - Default
   - TransparentFX
