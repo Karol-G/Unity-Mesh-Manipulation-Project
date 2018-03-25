@@ -1,5 +1,7 @@
 Mesh Manipulation/Library/
 Mesh Manipulation/Temp/
+Mesh Manipulation\Library\
+Mesh Manipulation\Temp\
 
 *.csproj
 
