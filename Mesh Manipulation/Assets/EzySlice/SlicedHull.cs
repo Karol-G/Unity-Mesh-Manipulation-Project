@@ -25,7 +25,7 @@ namespace EzySlice {
 			GameObject newObject = CreateUpperHull(original.name);
 
 			if (newObject != null) {
-				newObject.transform.localPosition = original.transform.localPosition;
+                newObject.transform.localPosition = original.transform.localPosition; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 				newObject.transform.localRotation = original.transform.localRotation;
 				newObject.transform.localScale = original.transform.localScale;
 
@@ -60,8 +60,8 @@ namespace EzySlice {
 			GameObject newObject = CreateLowerHull(original.name);
 
 			if (newObject != null) {
-				newObject.transform.localPosition = original.transform.localPosition;
-				newObject.transform.localRotation = original.transform.localRotation;
+				newObject.transform.localPosition = original.transform.localPosition; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                newObject.transform.localRotation = original.transform.localRotation;
 				newObject.transform.localScale = original.transform.localScale;
 
 				Material[] shared = original.GetComponent<MeshRenderer>().sharedMaterials;

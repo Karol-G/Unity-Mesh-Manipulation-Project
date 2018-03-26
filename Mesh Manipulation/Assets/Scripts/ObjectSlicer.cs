@@ -41,42 +41,39 @@ public class ObjectSlicer : MonoBehaviour {
 		 return null;
 	}
 
-    private GameObject[][] sliceSelectedGameObjectCombined(GameObject selectedGameObject, Vector3 position, float rotationAngle)
+    private GameObject sliceSelectedGameObjectCombined(GameObject selectedGameObject, Vector3 position, float rotationAngle)
     {
-        GameObject parent;
+        Debug.ClearDeveloperConsole();
         GameObject[] hull;
         List<GameObject> selectedGameObjectChildren = getAllLeafChildren(selectedGameObject);
+        List<GameObject> newGameObjectChildren = new List<GameObject>(selectedGameObjectChildren);
         GameObject slicerPlane = createSlicerPlane(position, rotationAngle);
-        foreach (GameObject child in selectedGameObjectChildren) {
-            print("selectedGameObject: " + child);           
+
+        foreach (GameObject child in selectedGameObjectChildren)
+        {          
             hull = sliceGameObject(slicerPlane, child, position, rotationAngle);
-            if (hull != null) {
-                parent = new GameObject(child.name);
-                parent.transform.position = child.transform.position;
-                parent.transform.parent = child.transform.parent;
+            if (hull != null)
+            {
+                newGameObjectChildren.Remove(child);
                 Destroy(child);
+                PivotPointManager.centerPivotPointOfGameObject(hull[0]);
+                PivotPointManager.centerPivotPointOfGameObject(hull[1]);
                 addMeshColliderToGameObjectDelayed(hull[0]);
                 addMeshColliderToGameObjectDelayed(hull[1]);
-                hull[0].transform.parent = parent.transform;
-                hull[1].transform.parent = parent.transform;
-                hull[0].transform.localPosition = Vector3.zero;
-                hull[1].transform.localPosition = Vector3.zero;
-                // Only root should have a rigidbody
-                if (parent.transform.parent == null)
-                {
-                    addRigidbodyToGameObjectDelayed(parent);
-                }
-            }            
+                newGameObjectChildren.Add(hull[0]);
+                newGameObjectChildren.Add(hull[1]);
+            }
         }
 
-        GameObject[][] sortedChildren = checkPlaneSideOfGameobjects(slicerPlane, getAllLeafChildren(selectedGameObject));
+        GameObject[][] sortedChildren = checkPlaneSideOfGameobjects(slicerPlane, newGameObjectChildren);
         Destroy(slicerPlane);
 
-        return sortedChildren;
-    }
+        return reorderChildren(selectedGameObject, sortedChildren);
+        //return null;
+    }    
 
     private GameObject createSlicerPlane(Vector3 position, float rotationAngle) {
-        GameObject slicerPlane = Instantiate(Resources.Load("DebugSlicerPlanePrefab"), position, Quaternion.identity) as GameObject;
+        GameObject slicerPlane = Instantiate(Resources.Load("SlicerPlanePrefab"), position, Quaternion.identity) as GameObject;
         slicerPlane.transform.eulerAngles = this.transform.eulerAngles + new Vector3(0, 0, slicerAngle.getSlicerAngle());
         slicerPlane.transform.Rotate(new Vector3(rotationAngle, 0, 0), Space.Self);
 
@@ -84,14 +81,27 @@ public class ObjectSlicer : MonoBehaviour {
     }
 
     private List<GameObject> getAllLeafChildren(GameObject root) {
-        //GameObject root = firstHit.transform.root.gameObject;
         List<GameObject> children = new List<GameObject>();
-        foreach (Collider child in root.GetComponentsInChildren<Collider>())
+        foreach (MeshFilter child in root.GetComponentsInChildren<MeshFilter>())
         {
             children.Add(child.gameObject);
         }
 
         return children;
+    }
+
+    private void printGameObjectList(List<GameObject> gameObjectList) {
+        print("List size: " + gameObjectList.Count);
+        foreach (GameObject gameObject in gameObjectList) {
+            print("GameObject: " + gameObject);
+        }
+    }
+
+    private void printGameObjectList(GameObject[] gameObjectList) {
+        print("List size: " + gameObjectList.Length);
+        foreach (GameObject gameObject in gameObjectList) {
+            print("GameObject: " + gameObject);
+        }
     }
 
     private GameObject[][] checkPlaneSideOfGameobjects(GameObject slicerPlane, List<GameObject> gameObjects) {
@@ -101,8 +111,8 @@ public class ObjectSlicer : MonoBehaviour {
         sortedGameObjects[1] = new List<GameObject>();
 
         foreach (GameObject gameObject in gameObjects) {
-            if (checkPlaneSideOfGameobject(mathPlane, gameObject))
-            {
+            createTestPoint(mathPlane, gameObject);
+            if (checkPlaneSideOfGameobject(mathPlane, gameObject)) {
                 sortedGameObjects[0].Add(gameObject);
             }
             else {
@@ -121,38 +131,57 @@ public class ObjectSlicer : MonoBehaviour {
     }
 
     private bool checkPlaneSideOfGameobject(UnityEngine.Plane mathPlane, GameObject gameObject) {
-        foreach (Vector3 vertex in gameObject.GetComponent<MeshFilter>().mesh.vertices) {
-            float distance = mathPlane.GetDistanceToPoint(vertex);
-            if (distance != 0) {
-                if (distance > 0)
-                {
-                    return true;
-                }
-                else {
-                    return false;
-                }
-            }
+        return !mathPlane.GetSide(gameObject.transform.position);
+    }
+
+    private void createTestPoint(UnityEngine.Plane mathPlane, GameObject gameObject) {
+        if (checkPlaneSideOfGameobject(mathPlane, gameObject))
+        {
+            Instantiate(Resources.Load("TestPointLeftPrefab"), gameObject.transform.position, Quaternion.identity);
+        }
+        else {
+            Instantiate(Resources.Load("TestPointRightPrefab"), gameObject.transform.position, Quaternion.identity);
+        }
+    }
+
+    private GameObject reorderChildren(GameObject selectedGameObject, GameObject[][] sortedChildren)
+    {
+        GameObject root = new GameObject(selectedGameObject.name);
+        GameObject leftHull = new GameObject("Left Hull");
+        GameObject rightHull = new GameObject("Right Hull");
+        root.transform.position = selectedGameObject.transform.position;
+        leftHull.transform.position = root.transform.position;
+        rightHull.transform.position = root.transform.position;
+        leftHull.transform.parent = root.transform;
+        rightHull.transform.parent = root.transform;
+
+        for (int i = 0; i < sortedChildren[0].Length; i++)
+        {
+            //print("Left hull child: " + sortedChildren[0][i].name);
+            sortedChildren[0][i].transform.parent = leftHull.transform;
+            sortedChildren[0][i].transform.localPosition = Vector3.zero;
         }
 
-        Debug.LogError("An error occured in method checkPlaneSideOfGameobject");
-        return true;
+        for (int i = 0; i < sortedChildren[1].Length; i++)
+        {
+            //print("Right hull child: " + sortedChildren[1][i].name);
+            sortedChildren[1][i].transform.parent = rightHull.transform;
+            sortedChildren[1][i].transform.localPosition = Vector3.zero;
+        }
+
+        addRigidbodyToGameObjectDelayed(root);
+        Destroy(selectedGameObject);
+
+        return root;
     }
 
     public GameObject[] sliceGameObject(GameObject slicerPlane, GameObject gameObjectToSlice, Vector3 position, float rotationAngle) {
-        //GameObject slicerPlane = Instantiate(Resources.Load("DebugSlicerPlanePrefab"), position, Quaternion.identity) as GameObject;        
-        //slicerPlane.transform.eulerAngles = this.transform.eulerAngles + new Vector3(0, 0, slicerAngle.getSlicerAngle());
-        //slicerPlane.transform.Rotate(new Vector3(rotationAngle, 0, 0), Space.Self);
-        /*Vector3[] vertices = slicerPlane.GetComponent<MeshFilter>().mesh.vertices;
-        foreach (Vector3 vertex in vertices) {
-            print("Plane vertex: " + vertex);
-        }*/
         SlicedHull slicedHull = slicerPlane.GetComponent<PlaneUsageExample>().SliceObject(gameObjectToSlice);
-        if (slicedHull != null) {
+        if (slicedHull != null && slicedHull.upperHull != null && slicedHull.lowerHull != null) {
             GameObject upperHull = slicedHull.CreateUpperHull(gameObjectToSlice, gameObjectToSlice.GetComponent<MeshRenderer>().material);
             GameObject lowerHull = slicedHull.CreateLowerHull(gameObjectToSlice, gameObjectToSlice.GetComponent<MeshRenderer>().material);
             return new GameObject[] { upperHull, lowerHull };
         }
-        //Destroy(slicerPlane);
 
         return null;
     }
