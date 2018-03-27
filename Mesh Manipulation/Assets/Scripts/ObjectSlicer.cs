@@ -48,16 +48,20 @@ public class ObjectSlicer : MonoBehaviour {
         List<GameObject> selectedGameObjectChildren = getAllLeafChildren(selectedGameObject);
         List<GameObject> newGameObjectChildren = new List<GameObject>(selectedGameObjectChildren);
         GameObject slicerPlane = createSlicerPlane(position, rotationAngle);
+        //Vector3 worldPositionOffset = calculateWorldOffsetPosition(selectedGameObject);
+        //Vector3 worldRotation = selectedGameObject.transform.eulerAngles;
 
-        foreach (GameObject child in selectedGameObjectChildren)
-        {          
-            hull = sliceGameObject(slicerPlane, child, position, rotationAngle);
+        foreach (GameObject child in selectedGameObjectChildren) {
+            child.transform.parent = null;
+            hull = sliceGameObject(slicerPlane, child);
             if (hull != null)
-            {
+            {                                
                 newGameObjectChildren.Remove(child);
                 Destroy(child);
-                PivotPointManager.centerPivotPointOfGameObject(hull[0]);
-                PivotPointManager.centerPivotPointOfGameObject(hull[1]);
+                //hull[0].transform.position += worldPositionOffset;
+                //hull[1].transform.position += worldPositionOffset;
+                PivotPointManager.centerPivotPointOfGameObject(hull[0]/*, worldRotation*/);
+                PivotPointManager.centerPivotPointOfGameObject(hull[1]/*, worldRotation*/);
                 addMeshColliderToGameObjectDelayed(hull[0]);
                 addMeshColliderToGameObjectDelayed(hull[1]);
                 newGameObjectChildren.Add(hull[0]);
@@ -70,7 +74,15 @@ public class ObjectSlicer : MonoBehaviour {
 
         return reorderChildren(selectedGameObject, sortedChildren);
         //return null;
-    }    
+    }
+
+    private Vector3 calculateWorldOffsetPosition(GameObject gameObject) {
+        if (gameObject.transform.childCount > 0) {
+            return gameObject.transform.position;
+        }
+
+        return Vector3.zero;
+    }
 
     private GameObject createSlicerPlane(Vector3 position, float rotationAngle) {
         GameObject slicerPlane = Instantiate(Resources.Load("SlicerPlanePrefab"), position, Quaternion.identity) as GameObject;
@@ -149,33 +161,32 @@ public class ObjectSlicer : MonoBehaviour {
         GameObject root = new GameObject(selectedGameObject.name);
         GameObject leftHull = new GameObject("Left Hull");
         GameObject rightHull = new GameObject("Right Hull");
-        root.transform.position = selectedGameObject.transform.position;
+        Quaternion rotation = sortedChildren[0][0].transform.rotation;
+        root.transform.position = selectedGameObject.transform.position;        
         leftHull.transform.position = root.transform.position;
         rightHull.transform.position = root.transform.position;
         leftHull.transform.parent = root.transform;
         rightHull.transform.parent = root.transform;
-
-        for (int i = 0; i < sortedChildren[0].Length; i++)
-        {
-            //print("Left hull child: " + sortedChildren[0][i].name);
+        root.transform.rotation = rotation;
+        //print("Reorder Children rotation: " + sortedChildren[0][0].transform.eulerAngles);
+        for (int i = 0; i < sortedChildren[0].Length; i++) {
             sortedChildren[0][i].transform.parent = leftHull.transform;
-            sortedChildren[0][i].transform.localPosition = Vector3.zero;
+            //sortedChildren[0][i].transform.rotation = Quaternion.identity;
         }
 
-        for (int i = 0; i < sortedChildren[1].Length; i++)
-        {
-            //print("Right hull child: " + sortedChildren[1][i].name);
+        for (int i = 0; i < sortedChildren[1].Length; i++) {
             sortedChildren[1][i].transform.parent = rightHull.transform;
-            sortedChildren[1][i].transform.localPosition = Vector3.zero;
+            //sortedChildren[1][i].transform.rotation = Quaternion.identity;
         }
 
-        addRigidbodyToGameObjectDelayed(root);
+        //root.transform.rotation = rotation;
+        //addRigidbodyToGameObjectDelayed(root);
         Destroy(selectedGameObject);
 
         return root;
     }
 
-    public GameObject[] sliceGameObject(GameObject slicerPlane, GameObject gameObjectToSlice, Vector3 position, float rotationAngle) {
+    public GameObject[] sliceGameObject(GameObject slicerPlane, GameObject gameObjectToSlice) {
         SlicedHull slicedHull = slicerPlane.GetComponent<PlaneUsageExample>().SliceObject(gameObjectToSlice);
         if (slicedHull != null && slicedHull.upperHull != null && slicedHull.lowerHull != null) {
             GameObject upperHull = slicedHull.CreateUpperHull(gameObjectToSlice, gameObjectToSlice.GetComponent<MeshRenderer>().material);

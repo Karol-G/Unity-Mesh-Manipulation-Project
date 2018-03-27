@@ -6,7 +6,7 @@ public class TimedDestructor : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        StartCoroutine(destroyAfterSeconds(15F));
+        StartCoroutine(destroyAfterSeconds(3F));
     }
 
     IEnumerator destroyAfterSeconds(float seconds)
