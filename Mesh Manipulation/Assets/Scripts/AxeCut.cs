@@ -62,7 +62,7 @@ public class AxeCut : MonoBehaviour {
         return tagList[tagList.Count - 1].Equals("Right") && tagList[tagList.Count - 2].Equals("Left");
     }
 
-    private void handleUnconnectedGameObjects(List<GameObject> gameObjectList) {
+    /*private void handleUnconnectedGameObjects(List<GameObject> gameObjectList) {
         List<Vector3[]> gameObjectVerticesList = getAllVertices(gameObjectList);
 
         for (int i = 0; i < gameObjectVerticesList.Count; i++) {
@@ -71,9 +71,9 @@ public class AxeCut : MonoBehaviour {
                 //gameObjectList[i].transform.parent = null;
             }
         }
-    }
+    }*/
 
-    private List<Vector3[]> getAllVertices(List<GameObject> gameObjectList) {
+    /*private List<Vector3[]> getAllVertices(List<GameObject> gameObjectList) {
         List<Vector3[]> verticesList = new List<Vector3[]>();
 
         foreach (GameObject gameObject in gameObjectList) {
@@ -99,7 +99,7 @@ public class AxeCut : MonoBehaviour {
 
 
         return false;
-    }
+    }*/
 
     private List<GameObject> getAllLeafChildren(GameObject root) {
         List<GameObject> children = new List<GameObject>();

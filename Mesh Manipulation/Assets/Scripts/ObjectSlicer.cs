@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using EzySlice;
 using System;
+using System.Linq;
 
 public class ObjectSlicer : MonoBehaviour {
 
@@ -36,6 +37,7 @@ public class ObjectSlicer : MonoBehaviour {
         List<GameObject> selectedGameObjectChildren = getAllLeafChildren(selectedGameObject);
         List<GameObject> newGameObjectChildren = new List<GameObject>(selectedGameObjectChildren);
         GameObject slicerPlane = createSlicerPlane(position, rotationAngle);
+        //List<GameObject> newGameObjects = new List<GameObject>();
 
         foreach (GameObject child in selectedGameObjectChildren) {
             child.transform.parent = null;
@@ -43,20 +45,25 @@ public class ObjectSlicer : MonoBehaviour {
             hull = sliceGameObject(slicerPlane, child);
             if (hull != null) {
                 copyGameObjectAttributes(child, hull);
-                newGameObjectChildren.Remove(child);
-                Destroy(child);
+                newGameObjectChildren.Remove(child);                
                 PivotPointManager.centerPivotPointOfGameObject(hull[0]);
                 PivotPointManager.centerPivotPointOfGameObject(hull[1]);
+                // calculateConnectedGameObjects // Ich muss prüfen ob ein object in der liste null sein könnte, axeCut löscht ja immer eins
+                //newGameObjects.Add(hull[0]);
+                //newGameObjects.Add(hull[1]);
+                updateConnectedGameObjects(hull[0], hull[1], child);
+                Destroy(child);
                 addMeshColliderToGameObjectDelayed(hull[0]);
                 addMeshColliderToGameObjectDelayed(hull[1]);
                 newGameObjectChildren.Add(hull[0]);
                 newGameObjectChildren.Add(hull[1]);
             }
         }
-
+        
         GameObject[][] leftRightHull = calculateLeftRightHull(slicerPlane, newGameObjectChildren);
         Destroy(slicerPlane);
         GameObject newRoot = createHullTreeHierarchy(selectedGameObject, leftRightHull);
+        calculateConnectedGameObjects(newGameObjectChildren);
 
         if (addRigidbody) {
             addRigidbodyToGameObjectDelayed(newRoot);
@@ -129,6 +136,80 @@ public class ObjectSlicer : MonoBehaviour {
         hull[0].AddComponent<GameObjectAttributes>().setTagList(attributes.getTagList());
         hull[1].AddComponent<GameObjectAttributes>().setTagList(attributes.getTagList());
     }
+
+    private void updateConnectedGameObjects(GameObject gameObject1, GameObject gameObject2, GameObject original) {
+        GameObjectAttributes originalAttributes = original.GetComponent<GameObjectAttributes>();
+        GameObjectAttributes connectedGameObjectAttributes;
+        gameObject1.GetComponent<GameObjectAttributes>().addConnectedGameObject(gameObject2);
+        gameObject2.GetComponent<GameObjectAttributes>().addConnectedGameObject(gameObject1);
+
+
+        foreach (GameObject connectedGameObject in originalAttributes.getConnectedGameObjectList().Concat(originalAttributes.getPotentialyConnectedGameObjectList())) {
+            //print("Original: " + original.name + " other: " + connectedGameObject.name);
+            connectedGameObjectAttributes = connectedGameObject.GetComponent<GameObjectAttributes>();
+            connectedGameObjectAttributes.removeConnectedGameObject(original);
+            connectedGameObjectAttributes.removePotentialyConnectedGameObject(original);
+            connectedGameObjectAttributes.addPotentialyConnectedGameObject(gameObject1);
+            connectedGameObjectAttributes.addPotentialyConnectedGameObject(gameObject2);
+        }
+
+        gameObject1.GetComponent<GameObjectAttributes>().addPotentialyConnectedGameObjectList(originalAttributes.getPotentialyConnectedGameObjectList());
+        gameObject2.GetComponent<GameObjectAttributes>().addPotentialyConnectedGameObjectList(originalAttributes.getPotentialyConnectedGameObjectList());
+    }
+
+    private void calculateConnectedGameObjects(List<GameObject> gameObjectList) {
+        foreach (GameObject gameObject in gameObjectList) {
+            calculateConnectedGameObjectsForSingle(gameObject);
+        }
+    }
+
+    private void calculateConnectedGameObjectsForSingle(GameObject gameObject) {
+        GameObjectAttributes attributes = gameObject.GetComponent<GameObjectAttributes>();
+        Vector3[] gameObjectVertices1 = convertToWorldCoordinates(gameObject);
+        GameObjectAttributes otherAttributes;
+
+        foreach (GameObject other in attributes.getPotentialyConnectedGameObjectList()) {
+            Vector3[] otherVertices = convertToWorldCoordinates(other);
+
+            if (isGameObjectConnected(gameObjectVertices1, otherVertices)) {
+                print("Connected: " + gameObject.name + " with " + other.name);
+                attributes.addConnectedGameObject(other);
+                otherAttributes = other.GetComponent<GameObjectAttributes>();
+                otherAttributes.removePotentialyConnectedGameObject(gameObject);
+                otherAttributes.addConnectedGameObject(gameObject);
+            }
+        }
+
+        attributes.clearPotentialyConnectedGameObject();
+    }
+
+    private Vector3[] convertToWorldCoordinates(GameObject gameObject) {
+        HashSet<Vector3> localVertices = new HashSet<Vector3>(gameObject.GetComponent<MeshFilter>().sharedMesh.vertices);
+        Vector3[] globalVertices = new Vector3[localVertices.Count];
+        Transform gameObjectTransform = gameObject.transform;
+
+        int index = 0;
+        foreach (Vector3 vertex in localVertices) { 
+            globalVertices[index] = gameObjectTransform.TransformPoint(vertex);
+            //print("VERTEX: " + globalVertices[index]); 
+            index++;
+        }
+
+        return globalVertices;
+    }
+
+    private bool isGameObjectConnected(Vector3[] gameObjectVertices, Vector3[] otherVertices) {
+        foreach (Vector3 vertex1 in gameObjectVertices) {
+            foreach (Vector3 vertex2 in otherVertices) {
+                if (vertex1.Equals(vertex2)) {
+                    print("Vertex: " + vertex1);
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }    
 
     private UnityEngine.Plane createMathPlane(GameObject slicerPlane) {
         Vector3 point1 = slicerPlane.transform.TransformPoint(new Vector3(5, 0, 5));

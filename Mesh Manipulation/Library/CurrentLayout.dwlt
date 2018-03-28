@@ -232,7 +232,7 @@ MonoBehaviour:
   m_MinSize: {x: 336, y: 271}
   m_MaxSize: {x: 14006, y: 10021}
   vertical: 0
-  controlID: 98
+  controlID: 77
 --- !u!114 &11
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -415,9 +415,9 @@ MonoBehaviour:
   m_PersistentViewDataDictionary: {fileID: 0}
   m_TreeViewState:
     scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: e8070000
-    m_LastClickedID: 0
-    m_ExpandedIDs: 6694fcff6a94fcff6e94fcff829dfcff869dfcff8cb5fcff90b5fcff94b5fcff4cc1fcff50c1fcff54c1fcff9ae1fcff9ee1fcffa2e1fcff0213fdff0613fdff0a13fdff5045fdff5445fdff5845fdff6c7ffdff0ef3fdff16f3fdffd000feffd800feffde91feffccaefeffd4aefefff6b6fefffeb6feff86bcfeff8ebcfeff5e04ffff6204ffff6604ffff7e1affff821affff861affff4447ffff4847ffff4c47ffff1e5affff225affff265afffff269fffff669fffffa69ffffee71fffff271fffff671ffff1281ffff1681ffff1a81ffff4c92ffff5092ffff5492ffff409bffff449bffff489bffff1aa5ffff1ea5ffff22a5ffff96b8ffffcec3ffff94cfffff9efbffff00000000
+    m_SelectedIDs: cc4cfeff
+    m_LastClickedID: -111412
+    m_ExpandedIDs: b64cfeffba4cfeffbe4cfeff3e60feff4260feff4660feff947cfeff4c88feff5088feff5488feff3c9dfeff409dfeff449dfeff02bbfeff06bbfeff0abbfeff84cbfeff88cbfeff8ccbfefffcdffeff00e0feff04e0feffe80fffffec0fffff1a22ffff1e22ffff802dffff842dffff882dffffb037ffffb437ffffb837ffff1041ffff1441ffff1841ffff4652ffff4a52ffff4e52ffff7057ffff7457ffff7857ffff2463ffff2863ffff2c63ffffc879ffffcc79ffffd079ffffc07effffc47effffc87effffba94ffffbe94ffffc294ffff9099ffff9499ffff9899fffffea4ffff02a5ffff06a5ffffd8b9ffffdcb9ffffe0b9ffff98d3ffff9cd3ffffa0d3ffff92e0ffff96e0ffff9ae0ffff44ecffff48ecffff4cecffff1af3ffff1ef3ffff22f3ffff7efbffff00000000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -473,9 +473,9 @@ MonoBehaviour:
   m_isRotationLocked: 0
   m_AudioPlay: 0
   m_Position:
-    m_Target: {x: -0.23655836, y: 11.810297, z: -0.23664442}
+    m_Target: {x: -0.28067103, y: 6.5083175, z: -0.5617607}
     speed: 2
-    m_Value: {x: -0.23655836, y: 11.810297, z: -0.23664442}
+    m_Value: {x: -0.28067103, y: 6.5083175, z: -0.5617607}
   m_RenderMode: 0
   m_ValidateTrueMetals: 0
   m_SceneViewState:
@@ -499,9 +499,9 @@ MonoBehaviour:
       speed: 2
       m_Value: 0
   m_Rotation:
-    m_Target: {x: 0.47655377, y: 0.06005092, z: -0.032651387, w: 0.87648404}
+    m_Target: {x: -0.6092943, y: -0.023308245, z: 0.01792342, w: -0.7923989}
     speed: 2
-    m_Value: {x: 0.4765538, y: 0.060050923, z: -0.03265139, w: 0.8764841}
+    m_Value: {x: -0.6092943, y: -0.023308245, z: 0.01792342, w: -0.7923989}
   m_Size:
     m_Target: 0.080834374
     speed: 2
@@ -556,20 +556,20 @@ MonoBehaviour:
     m_ShowAllHits: 0
     m_SearchArea: 0
     m_Folders:
-    - Assets/EzySlice/Framework
+    - Assets/Scripts
   m_ViewMode: 1
   m_StartGridSize: 16
   m_LastFolders:
-  - Assets/EzySlice/Framework
+  - Assets/Scripts
   m_LastFoldersGridSize: 16
   m_LastProjectPath: C:\Users\Cookie\Documents\GitHub\Unity-Mesh-Manipulation-Project\Mesh
     Manipulation
   m_IsLocked: 0
   m_FolderTreeState:
     scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: 8c270000
-    m_LastClickedID: 10124
-    m_ExpandedIDs: 0000000084270000a0270000a82700001e2800003c2800000c29000000ca9a3bffffff7f
+    m_SelectedIDs: ae270000
+    m_LastClickedID: 10158
+    m_ExpandedIDs: 0000000092270000ae270000b62700002c2800004a2800000029000000ca9a3bffffff7f
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -597,7 +597,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 0000000084270000a0270000a82700001e2800003c2800000c290000
+    m_ExpandedIDs: 0000000092270000ae270000b62700002c2800004a28000000290000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
