@@ -8,7 +8,7 @@ public class AxeCut : MonoBehaviour {
     private SlicerAngle slicerAngle;
     private GameObjectCombiner gameObjectCombiner;
     private float cuttingAngle;
-    private float cuttingWidth = 0.5F;//0.05F;
+    private float cuttingWidth = 0.05F;
     private float cuttingDepth = 0.2F;
 
     // Use this for initialization
@@ -25,21 +25,19 @@ public class AxeCut : MonoBehaviour {
     }
 
     public void doAxeCut(GameObject selectedGameObject) {
-        GameObject root = objectSlicer.sliceSelectedGameObjectCombined(selectedGameObject, getSlicerPlanePosition(cuttingWidth / 2), -cuttingAngle);
-    }
+        GameObject root = objectSlicer.sliceSelectedGameObjectCombined(selectedGameObject, getSlicerPlanePosition(cuttingWidth / 2), -cuttingAngle, false);
+        root = objectSlicer.sliceSelectedGameObjectCombined(root, getSlicerPlanePosition(-cuttingWidth / 2), cuttingAngle, false);
+        List<GameObject> leafChildren = getAllLeafChildren(root);
 
-    /*private void doAxeCut(GameObject selectedGameObject) {
-        GameObject[] hull1 = objectSlicer.sliceGameObject(selectedGameObject, getSlicerPlanePosition(cuttingWidth/2), -cuttingAngle);
-        Destroy(selectedGameObject);//
-        objectSlicer.addMeshColliderToGameObject(hull1[0]);            
-        GameObject[] hull2 = objectSlicer.sliceGameObject(hull1[0], getSlicerPlanePosition(-cuttingWidth/2), cuttingAngle);
-        Destroy(hull1[0]);
-        hull1[0] = null;
-        Destroy(hull2[1]);
-        GameObject combinedGameObject = gameObjectCombiner.combineGameObjects(new GameObject[] {hull1[1], hull2[0]}, false);
-        objectSlicer.addMeshColliderToGameObject(combinedGameObject, false);
-        //objectSlicer.addRigidbodyToGameObject(combinedGameObject);
-    }*/
+        foreach (GameObject leafChild in leafChildren) {
+            if (isGameObjectWaste(leafChild)) {
+                Destroy(leafChild);
+            }
+        }
+
+        //handleUnconnectedGameObjects(leafChildren);
+        //objectSlicer.addRigidbodyToGameObjectDelayed(root);
+    }
 
     private Vector3 getSlicerPlanePosition(float offset) {
         Vector3 origin = transform.TransformPoint(Quaternion.Euler(new Vector3(0, 0, slicerAngle.getSlicerAngle() - 90)) * new Vector3(offset, 0, 0));
@@ -56,5 +54,59 @@ public class AxeCut : MonoBehaviour {
 
     private float calculateCuttingAngle(float cuttingDepth, float cuttingWidth) {
         return 90 - Mathf.Atan(cuttingDepth / (cuttingWidth / 2)) * Mathf.Rad2Deg;
+    }
+
+    private bool isGameObjectWaste(GameObject gameObject) {
+        List<string> tagList = gameObject.GetComponent<GameObjectAttributes>().getTagList();
+
+        return tagList[tagList.Count - 1].Equals("Right") && tagList[tagList.Count - 2].Equals("Left");
+    }
+
+    private void handleUnconnectedGameObjects(List<GameObject> gameObjectList) {
+        List<Vector3[]> gameObjectVerticesList = getAllVertices(gameObjectList);
+
+        for (int i = 0; i < gameObjectVerticesList.Count; i++) {
+            if (isGameObjectUnconnected(i, gameObjectVerticesList)) {
+                // Es muss noch geprüft werden welche untereinander abhängen
+                //gameObjectList[i].transform.parent = null;
+            }
+        }
+    }
+
+    private List<Vector3[]> getAllVertices(List<GameObject> gameObjectList) {
+        List<Vector3[]> verticesList = new List<Vector3[]>();
+
+        foreach (GameObject gameObject in gameObjectList) {
+            verticesList.Add(convertToWorldCoordinates(gameObject));
+        }
+
+        return verticesList;
+    }
+
+    private Vector3[] convertToWorldCoordinates(GameObject gameObject) {
+        Vector3[] localVertices = gameObject.GetComponent<MeshFilter>().sharedMesh.vertices;
+        Vector3[] globalVertices = new Vector3[localVertices.Length];
+        Transform gameObjectTransform = gameObject.transform;
+
+        for (int i = 0; i < localVertices.Length; i++) {
+            globalVertices[i] = gameObjectTransform.TransformPoint(localVertices[i]);
+        }
+
+        return globalVertices;
+    }
+
+    private bool isGameObjectUnconnected(int gameObjectIndex, List<Vector3[]> gameObjectVerticesList) {
+
+
+        return false;
+    }
+
+    private List<GameObject> getAllLeafChildren(GameObject root) {
+        List<GameObject> children = new List<GameObject>();
+        foreach (MeshFilter child in root.GetComponentsInChildren<MeshFilter>()) {
+            children.Add(child.gameObject);
+        }
+
+        return children;
     }
 }

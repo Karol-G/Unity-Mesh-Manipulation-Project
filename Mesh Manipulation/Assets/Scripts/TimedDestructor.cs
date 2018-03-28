@@ -4,9 +4,11 @@ using UnityEngine;
 
 public class TimedDestructor : MonoBehaviour {
 
+    public float timeTillDestruction = 10F;
+
 	// Use this for initialization
 	void Start () {
-        StartCoroutine(destroyAfterSeconds(3F));
+        StartCoroutine(destroyAfterSeconds(timeTillDestruction));
     }
 
     IEnumerator destroyAfterSeconds(float seconds)

@@ -176,7 +176,7 @@ namespace EzySlice {
 						}
 
 						for (int i = 0; i < interHullCount; i++) {
-							crossHull.Add(result.intersectionPoints[i]);
+							crossHull.Add(result.intersectionPoints[i]);                            
 						}
 					}
 					else {
