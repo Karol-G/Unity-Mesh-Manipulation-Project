@@ -25,7 +25,7 @@ namespace EzySlice {
 			GameObject newObject = CreateUpperHull(original.name);
 
 			if (newObject != null) {
-                newObject.transform.localPosition = original.transform.localPosition; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                newObject.transform.localPosition = original.transform.localPosition;
 				newObject.transform.localRotation = original.transform.localRotation;
 				newObject.transform.localScale = original.transform.localScale;
 
@@ -49,7 +49,7 @@ namespace EzySlice {
 		 * This function will return null if upper hull does not exist
 		 */
 		public GameObject CreateUpperHull(string originalName) {
-			return CreateEmptyObject(originalName + " Upper_Hull", upper_hull);
+			return CreateEmptyObject(originalName + " LH", upper_hull);
 		}
 
 		public GameObject CreateLowerHull(GameObject original) {
@@ -60,7 +60,7 @@ namespace EzySlice {
 			GameObject newObject = CreateLowerHull(original.name);
 
 			if (newObject != null) {
-				newObject.transform.localPosition = original.transform.localPosition; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				newObject.transform.localPosition = original.transform.localPosition;
                 newObject.transform.localRotation = original.transform.localRotation;
 				newObject.transform.localScale = original.transform.localScale;
 
@@ -84,7 +84,7 @@ namespace EzySlice {
 		 * This function will return null if lower hull does not exist
 		 */
 		public GameObject CreateLowerHull(string originalName) {
-			return CreateEmptyObject(originalName + " Lower_Hull", lower_hull);
+			return CreateEmptyObject(originalName + " RH", lower_hull);
 		}
 
 		public Mesh upperHull {
