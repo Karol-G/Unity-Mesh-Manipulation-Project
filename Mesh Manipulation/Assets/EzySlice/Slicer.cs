@@ -4,13 +4,14 @@ using UnityEngine;
 
 namespace EzySlice {
 	public sealed class Slicer {
+        private static List<int[]> crossSectionTriangles = new List<int[]>();
 
-		/**
+        /**
 		 * An internal class for storing internal submesh values
-		 */ 
-		internal class SlicedSubmesh {
+		 */
+        internal class SlicedSubmesh {
 			public readonly List<Triangle> upperHull = new List<Triangle>();
-			public readonly List<Triangle> lowerHull = new List<Triangle>();
+			public readonly List<Triangle> lowerHull = new List<Triangle>();            
 
             /**
              * Check if the submesh has had any UV's added.
@@ -214,9 +215,13 @@ namespace EzySlice {
 			}
 
 			Mesh upperHull = CreateHull(meshes, upperHullCount, cross, true);
-			Mesh lowerHull = CreateHull(meshes, lowerHullCount, cross, false);
+            List<int[]> upperHullCrossSectionTriangles = new List<int[]>(crossSectionTriangles);
+            crossSectionTriangles.Clear();
+            Mesh lowerHull = CreateHull(meshes, lowerHullCount, cross, false);
+            List<int[]> lowerHullCrossSectionTriangles = new List<int[]>(crossSectionTriangles);
+            crossSectionTriangles.Clear();
 
-			return new SlicedHull(upperHull, lowerHull);
+            return new SlicedHull(upperHull, lowerHull, upperHullCrossSectionTriangles, lowerHullCrossSectionTriangles);
 		}
 
 		/**
@@ -368,7 +373,9 @@ namespace EzySlice {
 
 				// add triangles to the index for later generation
 				triangles.Add(crossIndices);
-			}
+                crossSectionTriangles.Add(crossIndices);
+
+            }
 
 			int totalTriangles = triangles.Count;
 

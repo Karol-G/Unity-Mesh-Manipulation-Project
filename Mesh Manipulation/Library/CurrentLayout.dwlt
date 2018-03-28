@@ -232,7 +232,7 @@ MonoBehaviour:
   m_MinSize: {x: 336, y: 271}
   m_MaxSize: {x: 14006, y: 10021}
   vertical: 0
-  controlID: 98
+  controlID: 100
 --- !u!114 &11
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -276,8 +276,8 @@ MonoBehaviour:
     y: 0
     width: 1152
     height: 375
-  m_MinSize: {x: 104, y: 121}
-  m_MaxSize: {x: 4004, y: 4021}
+  m_MinSize: {x: 100, y: 100}
+  m_MaxSize: {x: 4000, y: 4000}
   m_ActualView: {fileID: 18}
   m_Panes:
   - {fileID: 18}
@@ -415,9 +415,9 @@ MonoBehaviour:
   m_PersistentViewDataDictionary: {fileID: 0}
   m_TreeViewState:
     scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: e8070000
+    m_SelectedIDs: 0e070000
     m_LastClickedID: 0
-    m_ExpandedIDs: 6694fcff6a94fcff6e94fcff829dfcff869dfcff8cb5fcff90b5fcff94b5fcff4cc1fcff50c1fcff54c1fcff9ae1fcff9ee1fcffa2e1fcff0213fdff0613fdff0a13fdff5045fdff5445fdff5845fdff6c7ffdff0ef3fdff16f3fdffd000feffd800feffde91feffccaefeffd4aefefff6b6fefffeb6feff86bcfeff8ebcfeff5e04ffff6204ffff6604ffff7e1affff821affff861affff4447ffff4847ffff4c47ffff1e5affff225affff265afffff269fffff669fffffa69ffffee71fffff271fffff671ffff1281ffff1681ffff1a81ffff4c92ffff5092ffff5492ffff409bffff449bffff489bffff1aa5ffff1ea5ffff22a5ffff96b8ffffcec3ffff94cfffff9efbffff00000000
+    m_ExpandedIDs: 7efbffff00000000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -501,7 +501,7 @@ MonoBehaviour:
   m_Rotation:
     m_Target: {x: 0.47655377, y: 0.06005092, z: -0.032651387, w: 0.87648404}
     speed: 2
-    m_Value: {x: 0.4765538, y: 0.060050923, z: -0.03265139, w: 0.8764841}
+    m_Value: {x: -0.47655374, y: -0.06005092, z: 0.032651387, w: -0.876484}
   m_Size:
     m_Target: 0.080834374
     speed: 2
@@ -556,20 +556,20 @@ MonoBehaviour:
     m_ShowAllHits: 0
     m_SearchArea: 0
     m_Folders:
-    - Assets/EzySlice/Framework
+    - Assets/EzySlice
   m_ViewMode: 1
   m_StartGridSize: 16
   m_LastFolders:
-  - Assets/EzySlice/Framework
+  - Assets/EzySlice
   m_LastFoldersGridSize: 16
   m_LastProjectPath: C:\Users\Cookie\Documents\GitHub\Unity-Mesh-Manipulation-Project\Mesh
     Manipulation
   m_IsLocked: 0
   m_FolderTreeState:
     scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: 8c270000
-    m_LastClickedID: 10124
-    m_ExpandedIDs: 0000000084270000a0270000a82700001e2800003c2800000c29000000ca9a3bffffff7f
+    m_SelectedIDs: b6270000
+    m_LastClickedID: 10166
+    m_ExpandedIDs: 0000000092270000ae270000b62700002c2800004a2800001829000000ca9a3bffffff7f
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -597,7 +597,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 0000000084270000a0270000a82700001e2800003c2800000c290000
+    m_ExpandedIDs: 0000000092270000ae270000b62700002c2800004a28000018290000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 

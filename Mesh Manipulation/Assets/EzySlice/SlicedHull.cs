@@ -11,11 +11,16 @@ namespace EzySlice {
 	public sealed class SlicedHull {
 		private Mesh upper_hull;
 		private Mesh lower_hull;
+        private List<int[]> upperHullCrossSectionTriangles;
+        private List<int[]> lowerHullCrossSectionTriangles;
 
-		public SlicedHull(Mesh upperHull, Mesh lowerHull) {
+        public SlicedHull(Mesh upperHull, Mesh lowerHull, List<int[]> upperHullCrossSectionTriangles, List<int[]> lowerHullCrossSectionTriangles) {
 			this.upper_hull = upperHull;
 			this.lower_hull = lowerHull;
-		}
+            this.upperHullCrossSectionTriangles = upperHullCrossSectionTriangles;
+            this.lowerHullCrossSectionTriangles = lowerHullCrossSectionTriangles;
+
+        }
 
 		public GameObject CreateUpperHull(GameObject original) {
 			return CreateUpperHull(original, null);
