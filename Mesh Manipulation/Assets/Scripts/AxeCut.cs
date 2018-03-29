@@ -95,7 +95,6 @@ public class AxeCut : MonoBehaviour {
                         gameObjectQueue.Add(connectedGameObjects[i]);
                     }
                 }
-
             }
 
             index++;
@@ -107,14 +106,15 @@ public class AxeCut : MonoBehaviour {
     }
 
     private void disconnectIslands(List<List<GameObject>> gameObjectIslands) {
+        GameObject root = gameObjectIslands[0][0].transform.root.gameObject;
+
         if (gameObjectIslands.Count > 1) {
-            GameObject root = gameObjectIslands[0][0].transform.root.gameObject;
             Quaternion rotation = root.transform.rotation;
             string rootName = root.name;
             detachChildren(root);
 
             int index = 0;
-            GameObject newRoot;            
+            GameObject newRoot;
             foreach (List<GameObject> island in gameObjectIslands) {
                 newRoot = new GameObject(rootName + " " + index + 1);
                 newRoot.transform.position = findCenterPoint(island);
@@ -122,8 +122,13 @@ public class AxeCut : MonoBehaviour {
 
                 foreach (GameObject gameObject in island) {
                     gameObject.transform.parent = newRoot.transform;
-                }                
+                }
+
+                objectSlicer.addRigidbodyToGameObjectDelayed(newRoot);
             }
+        }
+        else {
+            objectSlicer.addRigidbodyToGameObjectDelayed(root);
         }
     }
 
