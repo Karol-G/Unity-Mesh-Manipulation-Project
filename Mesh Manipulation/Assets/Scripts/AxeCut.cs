@@ -28,14 +28,16 @@ public class AxeCut : MonoBehaviour {
         GameObject root = objectSlicer.sliceSelectedGameObjectCombined(selectedGameObject, getSlicerPlanePosition(cuttingWidth / 2), -cuttingAngle, false);
         root = objectSlicer.sliceSelectedGameObjectCombined(root, getSlicerPlanePosition(-cuttingWidth / 2), cuttingAngle, false);
         List<GameObject> leafChildren = getAllLeafChildren(root);
+        List<GameObject> tempLeafChildren = new List<GameObject>(leafChildren);
 
         foreach (GameObject leafChild in leafChildren) {
             if (isGameObjectWaste(leafChild)) {
-                Destroy(leafChild);
+                tempLeafChildren.Remove(leafChild);
+                destroyGameObject(leafChild);                
             }
         }
 
-        //handleUnconnectedGameObjects(leafChildren);
+        handleUnconnectedGameObjects(tempLeafChildren);
         //objectSlicer.addRigidbodyToGameObjectDelayed(root);
     }
 
@@ -62,44 +64,95 @@ public class AxeCut : MonoBehaviour {
         return tagList[tagList.Count - 1].Equals("Right") && tagList[tagList.Count - 2].Equals("Left");
     }
 
-    /*private void handleUnconnectedGameObjects(List<GameObject> gameObjectList) {
-        List<Vector3[]> gameObjectVerticesList = getAllVertices(gameObjectList);
+    private void handleUnconnectedGameObjects(List<GameObject> gameObjectList) {
+        List<List<GameObject>> gameObjectIsland = calculateIslands(gameObjectList);
+        disconnectIslands(gameObjectIsland);
+    }
 
-        for (int i = 0; i < gameObjectVerticesList.Count; i++) {
-            if (isGameObjectUnconnected(i, gameObjectVerticesList)) {
-                // Es muss noch geprüft werden welche untereinander abhängen
-                //gameObjectList[i].transform.parent = null;
+    private List<List<GameObject>> calculateIslands(List<GameObject> gameObjectList) {
+        List<List<GameObject>> gameObjectIslands = new List<List<GameObject>>();
+        List<GameObject> gameObjectQueue = new List<GameObject>();
+        GameObject currentGameObject;
+        List<GameObject> connectedGameObjects;
+        int index = 0;
+
+        while (gameObjectList.Count > 0) {
+            gameObjectQueue.Add(gameObjectList[0]);
+            gameObjectIslands.Add(new List<GameObject>());
+
+            while (gameObjectQueue.Count > 0) {
+                currentGameObject = gameObjectQueue[0];
+                gameObjectQueue.Remove(currentGameObject);
+                gameObjectList.Remove(currentGameObject);
+
+                if (!gameObjectIslands[index].Contains(currentGameObject)) {
+                    gameObjectIslands[index].Add(currentGameObject);
+                }
+
+                connectedGameObjects = currentGameObject.GetComponent<GameObjectAttributes>().getConnectedGameObjectList();
+                for (int i = 0; i < connectedGameObjects.Count; i++) {
+                    if (!gameObjectQueue.Contains(connectedGameObjects[i]) && !gameObjectIslands[index].Contains(connectedGameObjects[i])) {
+                        gameObjectQueue.Add(connectedGameObjects[i]);
+                    }
+                }
+
+            }
+
+            index++;
+        }
+
+        //printIslands(gameObjectIslands);
+
+        return gameObjectIslands;
+    }
+
+    private void disconnectIslands(List<List<GameObject>> gameObjectIslands) {
+        if (gameObjectIslands.Count > 1) {
+            GameObject root = gameObjectIslands[0][0].transform.root.gameObject;
+            Quaternion rotation = root.transform.rotation;
+            string rootName = root.name;
+            detachChildren(root);
+
+            int index = 0;
+            GameObject newRoot;            
+            foreach (List<GameObject> island in gameObjectIslands) {
+                newRoot = new GameObject(rootName + " " + index + 1);
+                newRoot.transform.position = findCenterPoint(island);
+                newRoot.transform.rotation = rotation;
+
+                foreach (GameObject gameObject in island) {
+                    gameObject.transform.parent = newRoot.transform;
+                }                
             }
         }
-    }*/
+    }
 
-    /*private List<Vector3[]> getAllVertices(List<GameObject> gameObjectList) {
-        List<Vector3[]> verticesList = new List<Vector3[]>();
+    private void detachChildren(GameObject root) {
+        root.transform.GetChild(0).DetachChildren();
+        root.transform.GetChild(1).DetachChildren();
+        Destroy(root);
+    }
+
+    private Vector3 findCenterPoint(List<GameObject> gameObjectList) {
+        Vector3 center = Vector3.zero;
+        float count = 0;
 
         foreach (GameObject gameObject in gameObjectList) {
-            verticesList.Add(convertToWorldCoordinates(gameObject));
+            center += gameObject.transform.position;
+            count++;
         }
 
-        return verticesList;
+        return -(center / count);
     }
 
-    private Vector3[] convertToWorldCoordinates(GameObject gameObject) {
-        Vector3[] localVertices = gameObject.GetComponent<MeshFilter>().sharedMesh.vertices;
-        Vector3[] globalVertices = new Vector3[localVertices.Length];
-        Transform gameObjectTransform = gameObject.transform;
-
-        for (int i = 0; i < localVertices.Length; i++) {
-            globalVertices[i] = gameObjectTransform.TransformPoint(localVertices[i]);
+    private void printIslands(List<List<GameObject>> gameObjectIslands) {
+        print("Islands: " + gameObjectIslands.Count);
+        int index = 0;
+        foreach (List<GameObject> list in gameObjectIslands) {
+            print("Islands[" + index + "]: " + list.Count);
+            index++;
         }
-
-        return globalVertices;
     }
-
-    private bool isGameObjectUnconnected(int gameObjectIndex, List<Vector3[]> gameObjectVerticesList) {
-
-
-        return false;
-    }*/
 
     private List<GameObject> getAllLeafChildren(GameObject root) {
         List<GameObject> children = new List<GameObject>();
@@ -109,4 +162,10 @@ public class AxeCut : MonoBehaviour {
 
         return children;
     }
+
+    private void destroyGameObject(GameObject gameObject) {
+        gameObject.GetComponent<GameObjectAttributes>().destroyGameObject();
+        Destroy(gameObject);
+    }
+    
 }

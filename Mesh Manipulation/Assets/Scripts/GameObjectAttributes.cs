@@ -9,10 +9,12 @@ public class GameObjectAttributes : MonoBehaviour {
     public List<GameObject> connectedGameObjectList = new List<GameObject>();
     public List<GameObject> potentialyConnectedGameObjectList = new List<GameObject>();
     public bool debug = false;
+    private bool debug1 = false;
 
     void Update() {
-        if (Input.GetKeyDown("u") && debug) {
+        if ((debug && !debug1) || (!debug && debug1)) {
             setVisible();
+            debug1 = !debug1;
         }
     }
 
@@ -66,11 +68,7 @@ public class GameObjectAttributes : MonoBehaviour {
         potentialyConnectedGameObjectList.Clear();
     }
 
-    void OnDestroy() {
-        destroyGameObject();
-    }
-
-    private void destroyGameObject() {
+    public void destroyGameObject() {
         foreach (GameObject gameObject in connectedGameObjectList.Concat(potentialyConnectedGameObjectList)) {
             gameObject.GetComponent<GameObjectAttributes>().removeConnectedGameObject(this.gameObject);
             gameObject.GetComponent<GameObjectAttributes>().removePotentialyConnectedGameObject(this.gameObject);
