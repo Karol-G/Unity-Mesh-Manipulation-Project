@@ -5,7 +5,7 @@ using System.Linq;
 
 public class GameObjectAttributes : MonoBehaviour {
 
-    private List<string> tagList = new List<string>();
+    public List<string> tagList = new List<string>();
     public List<GameObject> connectedGameObjectList = new List<GameObject>();
     public List<GameObject> potentialyConnectedGameObjectList = new List<GameObject>();
     public bool debug = false;

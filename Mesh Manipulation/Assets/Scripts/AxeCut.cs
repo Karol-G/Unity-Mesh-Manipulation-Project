@@ -31,7 +31,7 @@ public class AxeCut : MonoBehaviour {
         List<GameObject> tempLeafChildren = new List<GameObject>(leafChildren);
 
         foreach (GameObject leafChild in leafChildren) {
-            if (isGameObjectWaste(leafChild)) {
+            if (isGameObjectWaste(leafChild, new string[] {"Right", "Left"})) {
                 tempLeafChildren.Remove(leafChild);
                 destroyGameObject(leafChild);                
             }
@@ -58,10 +58,17 @@ public class AxeCut : MonoBehaviour {
         return 90 - Mathf.Atan(cuttingDepth / (cuttingWidth / 2)) * Mathf.Rad2Deg;
     }
 
-    private bool isGameObjectWaste(GameObject gameObject) {
+    private bool isGameObjectWaste(GameObject gameObject, string[] tags) {
         List<string> tagList = gameObject.GetComponent<GameObjectAttributes>().getTagList();
 
-        return tagList[tagList.Count - 1].Equals("Right") && tagList[tagList.Count - 2].Equals("Left");
+        for (int i = 0; i < tags.Length; i++) {
+            if (!tagList[tagList.Count - i - 1].Equals(tags[i])) {
+                return false;
+            }
+        }
+
+        return true;
+        //return tagList[tagList.Count - 1].Equals("Right") && tagList[tagList.Count - 2].Equals("Left");
     }
 
     private void handleUnconnectedGameObjects(List<GameObject> gameObjectList) {
@@ -100,7 +107,7 @@ public class AxeCut : MonoBehaviour {
             index++;
         }
 
-        //printIslands(gameObjectIslands);
+        printIslands(gameObjectIslands);
 
         return gameObjectIslands;
     }
@@ -130,7 +137,9 @@ public class AxeCut : MonoBehaviour {
         else {
             objectSlicer.addRigidbodyToGameObjectDelayed(root);
         }
-    }
+
+        //combineMainIsland(gameObjectIslands);
+    }    
 
     private void detachChildren(GameObject root) {
         root.transform.GetChild(0).DetachChildren();
@@ -172,5 +181,23 @@ public class AxeCut : MonoBehaviour {
         gameObject.GetComponent<GameObjectAttributes>().destroyGameObject();
         Destroy(gameObject);
     }
-    
+
+    private void combineMainIsland(List<List<GameObject>> gameObjectIslands) {
+        List<GameObject> mainIsland = getMainIsland(gameObjectIslands);
+        GameObject combinedGameObject = gameObjectCombiner.combineGameObjects(mainIsland.ToArray(), true);
+        objectSlicer.addMeshColliderToGameObjectDelayed(combinedGameObject);
+    }
+
+    private List<GameObject> getMainIsland(List<List<GameObject>> gameObjectIslands) {
+
+        List<GameObject> mainIsland = gameObjectIslands[0];
+        foreach (List<GameObject> island in gameObjectIslands) {
+            if (island.Count > mainIsland.Count) {
+                mainIsland = island;
+            }
+        }
+
+        return mainIsland;
+    }
+
 }
