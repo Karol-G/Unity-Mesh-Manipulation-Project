@@ -195,13 +195,13 @@ namespace EzySlice {
 				slices[submesh] = mesh;
 			}
 
-			return CreateFrom(slices, CreateFrom(crossHull, pl.normal));
+			return CreateFrom(slices, CreateFrom(crossHull, pl.normal), genCrossSection);
 		}
 
 		/**
 		 * Generates a single SlicedHull from a set of cut submeshes 
 		 */
-		private static SlicedHull CreateFrom(SlicedSubmesh[] meshes, List<Triangle> cross) {
+		private static SlicedHull CreateFrom(SlicedSubmesh[] meshes, List<Triangle> cross, bool genCrossSection = true) {
 			int submeshCount = meshes.Length;
 
 			int upperHullCount = 0;
@@ -213,8 +213,8 @@ namespace EzySlice {
 				lowerHullCount += meshes[submesh].lowerHull.Count;
 			}
 
-			Mesh upperHull = CreateHull(meshes, upperHullCount, cross, true);
-			Mesh lowerHull = CreateHull(meshes, lowerHullCount, cross, false);
+			Mesh upperHull = CreateHull(meshes, upperHullCount, cross, true, genCrossSection);
+			Mesh lowerHull = CreateHull(meshes, lowerHullCount, cross, false, genCrossSection);
 
 			return new SlicedHull(upperHull, lowerHull);
 		}
@@ -222,7 +222,7 @@ namespace EzySlice {
 		/**
 		 * Generate a single Mesh HULL of either the UPPER or LOWER hulls. 
 		 */
-		private static Mesh CreateHull(SlicedSubmesh[] meshes, int total, List<Triangle> crossSection, bool isUpper) {
+		private static Mesh CreateHull(SlicedSubmesh[] meshes, int total, List<Triangle> crossSection, bool isUpper, bool genCrossSection = true) {
 			if (total <= 0) {
 				return null;
 			}
@@ -305,7 +305,7 @@ namespace EzySlice {
 			}
 
 			// generate the cross section required for this particular hull
-			if (crossSection != null && crossCount > 0) {
+			if (crossSection != null && crossCount > 0 && genCrossSection) {
 				int[] crossIndices = new int[crossCount * 3];
 
 				for (int i = 0, triIndex = 0; i < crossCount; i++, triIndex += 3) {

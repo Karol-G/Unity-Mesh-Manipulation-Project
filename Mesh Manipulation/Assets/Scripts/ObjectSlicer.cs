@@ -8,10 +8,13 @@ using System.Linq;
 public class ObjectSlicer : MonoBehaviour {
 
     private SlicerAngle slicerAngle;
+    private ConnectedGameObjectHandler connectedGameObjectHandler = new ConnectedGameObjectHandler();
+    private ComponentHandler componentHandler;
 
     // Use this for initialization
     void Start() {
         slicerAngle = GetComponent<SlicerAngle>();
+        componentHandler = GameObject.Find("Controller").GetComponent<ComponentHandler>();
     }
 
     // Update is called once per frame
@@ -21,49 +24,55 @@ public class ObjectSlicer : MonoBehaviour {
 
     // Currently bugged
     public GameObject[] sliceSelectedGameObjectNonCombined(GameObject selectedGameObject, Vector3 position, float rotationAngle) {
-        GameObject root = sliceSelectedGameObjectCombined(selectedGameObject, position, rotationAngle, true, false);
+        GameObject root = sliceSelectedGameObjectCombined(selectedGameObject, position, rotationAngle, "Left", "Right", true, false);
         GameObject leftHull = root.transform.GetChild(0).gameObject;
         GameObject rightHull = root.transform.GetChild(1).gameObject;
-        addRigidbodyToGameObjectDelayed(leftHull);
-        addRigidbodyToGameObjectDelayed(rightHull);
+        componentHandler.addRigidbodyToGameObjectDelayed(leftHull);
+        componentHandler.addRigidbodyToGameObjectDelayed(rightHull);
         root.transform.DetachChildren();
         Destroy(root);
 
         return new GameObject[] { leftHull, rightHull };
     }
 
-    public GameObject sliceSelectedGameObjectCombined(GameObject selectedGameObject, Vector3 position, float rotationAngle, bool addRigidbody = true, bool combined = true) {
-        //Debug.ClearDeveloperConsole();
-        GameObject[] hull;
-        List<GameObject> selectedGameObjectChildren = getAllLeafChildren(selectedGameObject);
-        List<GameObject> newGameObjectChildren = new List<GameObject>(selectedGameObjectChildren);
-        GameObject slicerPlane = createSlicerPlane(position, rotationAngle);
+    public GameObject sliceSelectedGameObjectCombined(GameObject root, Vector3 position, float rotationAngle, string leftTag, string rightTag, bool genCrossSection, bool addRigidbody = true, bool combined = true) {
+        List<GameObject> selectedGameObjectChildren = getAllLeafChildren(root);
 
-        foreach (GameObject child in selectedGameObjectChildren) {
-            child.transform.parent = null;
-            addGameObjectAttributes(child);
-            hull = sliceGameObject(slicerPlane, child);
+        return sliceSelectedGameObjectCombined(selectedGameObjectChildren, position, rotationAngle, leftTag, rightTag, genCrossSection, addRigidbody, combined);
+    }
+
+    public GameObject sliceSelectedGameObjectCombined(List<GameObject> gameObjectList, Vector3 position, float rotationAngle, string leftTag, string rightTag, bool genCrossSection, bool addRigidbody = true, bool combined = true) {
+        gameObjectList = sortGameObjectsByDistance(gameObjectList, position);
+        GameObject root = gameObjectList[0].transform.root.gameObject;
+        List<GameObject> newGameObjectChildren = new List<GameObject>(getAllLeafChildren(root));
+        GameObject slicerPlane = createSlicerPlane(position, rotationAngle);
+        GameObject[] hull;
+
+        foreach (GameObject gameObject in gameObjectList) {
+            gameObject.transform.parent = null;
+            addGameObjectAttributes(gameObject);
+            hull = sliceGameObject(slicerPlane, gameObject, genCrossSection);
             if (hull != null) {
-                copyGameObjectAttributes(child, hull);
-                newGameObjectChildren.Remove(child);
+                copyGameObjectAttributes(gameObject, hull);
+                newGameObjectChildren.Remove(gameObject);
                 PivotPointManager.centerPivotPointOfGameObject(hull[0]);
                 PivotPointManager.centerPivotPointOfGameObject(hull[1]);
-                updateConnectedGameObjects(hull[0], hull[1], child, combined);
-                Destroy(child);
-                addMeshColliderToGameObjectDelayed(hull[0]);
-                addMeshColliderToGameObjectDelayed(hull[1]);
+                connectedGameObjectHandler.updateConnectedGameObjects(hull[0], hull[1], gameObject, combined);
+                Destroy(gameObject);
+                componentHandler.addMeshColliderToGameObjectDelayed(hull[0]);
+                componentHandler.addMeshColliderToGameObjectDelayed(hull[1]);
                 newGameObjectChildren.Add(hull[0]);
                 newGameObjectChildren.Add(hull[1]);
             }
         }
 
-        GameObject[][] leftRightHull = calculateLeftRightHull(slicerPlane, newGameObjectChildren);
+        GameObject[][] leftRightHull = calculateLeftRightHull(slicerPlane, newGameObjectChildren, leftTag, rightTag);
         Destroy(slicerPlane);
-        GameObject newRoot = createHullTreeHierarchy(selectedGameObject, leftRightHull);
-        calculateConnectedGameObjects(newGameObjectChildren);
+        GameObject newRoot = createHullTreeHierarchy(root, leftRightHull);
+        connectedGameObjectHandler.calculateConnectedGameObjects(newGameObjectChildren);
 
         if (addRigidbody) {
-            addRigidbodyToGameObjectDelayed(newRoot);
+            componentHandler.addRigidbodyToGameObjectDelayed(newRoot);
         }
 
         return newRoot;
@@ -99,7 +108,11 @@ public class ObjectSlicer : MonoBehaviour {
         return children;
     }
 
-    private GameObject[][] calculateLeftRightHull(GameObject slicerPlane, List<GameObject> gameObjects) {
+    private List<GameObject> sortGameObjectsByDistance(List<GameObject> gameObjectList, Vector3 position) {
+        return gameObjectList = gameObjectList.OrderBy(x => Vector2.Distance(position, x.transform.position)).ToList();
+    }
+
+    private GameObject[][] calculateLeftRightHull(GameObject slicerPlane, List<GameObject> gameObjects, string leftTag, string rightTag) {
         UnityEngine.Plane mathPlane = createMathPlane(slicerPlane);
         List<GameObject>[] sortedGameObjects = new List<GameObject>[2];
         sortedGameObjects[0] = new List<GameObject>();
@@ -110,12 +123,12 @@ public class ObjectSlicer : MonoBehaviour {
             if (isLeftHull(mathPlane, gameObject)) {
                 // Left
                 sortedGameObjects[0].Add(gameObject);
-                gameObject.GetComponent<GameObjectAttributes>().addTag("Left");
+                gameObject.GetComponent<GameObjectAttributes>().addTag(leftTag);
             }
             else {
                 // Right
                 sortedGameObjects[1].Add(gameObject);
-                gameObject.GetComponent<GameObjectAttributes>().addTag("Right");
+                gameObject.GetComponent<GameObjectAttributes>().addTag(rightTag);
             }
         }
 
@@ -132,83 +145,7 @@ public class ObjectSlicer : MonoBehaviour {
         GameObjectAttributes attributes = original.GetComponent<GameObjectAttributes>();
         hull[0].AddComponent<GameObjectAttributes>().setTagList(attributes.getTagList());
         hull[1].AddComponent<GameObjectAttributes>().setTagList(attributes.getTagList());
-    }
-
-    private void updateConnectedGameObjects(GameObject gameObject1, GameObject gameObject2, GameObject original, bool combined) {
-        GameObjectAttributes originalAttributes = original.GetComponent<GameObjectAttributes>();
-        GameObjectAttributes connectedGameObjectAttributes;
-        if (combined) {
-            gameObject1.GetComponent<GameObjectAttributes>().addConnectedGameObject(gameObject2);
-            gameObject2.GetComponent<GameObjectAttributes>().addConnectedGameObject(gameObject1);
-        }
-
-        foreach (GameObject connectedGameObject in originalAttributes.getConnectedGameObjectList().Concat(originalAttributes.getPotentialyConnectedGameObjectList())) {
-            //print("Original: " + original.name + " other: " + connectedGameObject.name);
-            connectedGameObjectAttributes = connectedGameObject.GetComponent<GameObjectAttributes>();
-            connectedGameObjectAttributes.removeConnectedGameObject(original);
-            connectedGameObjectAttributes.removePotentialyConnectedGameObject(original);
-            connectedGameObjectAttributes.addPotentialyConnectedGameObject(gameObject1);
-            connectedGameObjectAttributes.addPotentialyConnectedGameObject(gameObject2);
-        }
-
-        gameObject1.GetComponent<GameObjectAttributes>().addPotentialyConnectedGameObjectList(originalAttributes.getPotentialyConnectedGameObjectList());
-        gameObject2.GetComponent<GameObjectAttributes>().addPotentialyConnectedGameObjectList(originalAttributes.getPotentialyConnectedGameObjectList());
-    }
-
-    private void calculateConnectedGameObjects(List<GameObject> gameObjectList) {
-        foreach (GameObject gameObject in gameObjectList) {
-            calculateConnectedGameObjectsForSingle(gameObject);
-        }
-    }
-
-    private void calculateConnectedGameObjectsForSingle(GameObject gameObject) {
-        GameObjectAttributes attributes = gameObject.GetComponent<GameObjectAttributes>();
-        Vector3[] gameObjectVertices1 = convertToWorldCoordinates(gameObject);
-        GameObjectAttributes otherAttributes;
-
-        foreach (GameObject other in attributes.getPotentialyConnectedGameObjectList()) {
-            Vector3[] otherVertices = convertToWorldCoordinates(other);
-            //print("Potentialy connected: " + gameObject.name + " with " + other.name);
-            if (isGameObjectConnected(gameObjectVertices1, otherVertices)) {
-                //print("Connected: " + gameObject.name + " with " + other.name);
-                attributes.addConnectedGameObject(other);
-                otherAttributes = other.GetComponent<GameObjectAttributes>();
-                otherAttributes.removePotentialyConnectedGameObject(gameObject);
-                otherAttributes.addConnectedGameObject(gameObject);
-            }
-        }
-
-        attributes.clearPotentialyConnectedGameObject();
-    }
-
-    private Vector3[] convertToWorldCoordinates(GameObject gameObject) {
-        HashSet<Vector3> localVertices = new HashSet<Vector3>(gameObject.GetComponent<MeshFilter>().sharedMesh.vertices);
-        Vector3[] globalVertices = new Vector3[localVertices.Count];
-        Transform gameObjectTransform = gameObject.transform;
-
-        int index = 0;
-        foreach (Vector3 vertex in localVertices) {
-            globalVertices[index] = gameObjectTransform.TransformPoint(vertex);
-            //print("VERTEX: " + globalVertices[index]); 
-            index++;
-        }
-
-        return globalVertices;
-    }
-
-    private bool isGameObjectConnected(Vector3[] gameObjectVertices, Vector3[] otherVertices) {
-        foreach (Vector3 vertex1 in gameObjectVertices) {
-            foreach (Vector3 vertex2 in otherVertices) {
-                //print("Vertex1: " + vertex1 + " Vertex2: " + vertex2);
-                if (vertex1 == vertex2) {
-                    //print("Vertex: " + vertex1);
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
+    }    
 
     private UnityEngine.Plane createMathPlane(GameObject slicerPlane) {
         Vector3 point1 = slicerPlane.transform.TransformPoint(new Vector3(5, 0, 5));
@@ -255,8 +192,8 @@ public class ObjectSlicer : MonoBehaviour {
         return root;
     }
 
-    private GameObject[] sliceGameObject(GameObject slicerPlane, GameObject gameObjectToSlice) {
-        SlicedHull slicedHull = slicerPlane.GetComponent<PlaneUsageExample>().SliceObject(gameObjectToSlice);
+    private GameObject[] sliceGameObject(GameObject slicerPlane, GameObject gameObjectToSlice, bool genCrossSection = true) {
+        SlicedHull slicedHull = slicerPlane.GetComponent<PlaneUsageExample>().SliceObject(gameObjectToSlice, genCrossSection);
         if (slicedHull != null && slicedHull.upperHull != null && slicedHull.lowerHull != null) {
             GameObject upperHull = slicedHull.CreateUpperHull(gameObjectToSlice, gameObjectToSlice.GetComponent<MeshRenderer>().material);
             GameObject lowerHull = slicedHull.CreateLowerHull(gameObjectToSlice, gameObjectToSlice.GetComponent<MeshRenderer>().material);
@@ -266,41 +203,4 @@ public class ObjectSlicer : MonoBehaviour {
         return null;
     }
 
-    public void addMeshColliderToGameObject(GameObject gameObject, bool convex = true) {
-        Destroy(gameObject.GetComponent<Collider>());
-        MeshCollider meshCollider = gameObject.AddComponent<MeshCollider>() as MeshCollider;
-        meshCollider.convex = convex;
-    }
-
-    public void addMeshColliderToGameObjectDelayed(GameObject gameObject, bool convex = true) {
-        Destroy(gameObject.GetComponent<Collider>());
-        StartCoroutine(meshColliderCoroutine(gameObject));
-    }
-
-    IEnumerator meshColliderCoroutine(GameObject gameObject) {
-        yield return new WaitForSeconds(0.01F);
-        if (gameObject != null) {
-            MeshCollider meshCollider = gameObject.AddComponent<MeshCollider>() as MeshCollider;
-            meshCollider.convex = true;
-        }
-    }
-
-    public void addRigidbodyToGameObject(GameObject gameObject) {
-        Destroy(gameObject.GetComponent<Rigidbody>());
-        Rigidbody rigidbody = gameObject.AddComponent<Rigidbody>() as Rigidbody;
-        rigidbody.useGravity = true;
-    }
-
-    public void addRigidbodyToGameObjectDelayed(GameObject gameObject) {
-        Destroy(gameObject.GetComponent<Rigidbody>());
-        StartCoroutine(rigidbodyCoroutine(gameObject));
-    }
-
-    IEnumerator rigidbodyCoroutine(GameObject gameObject) {
-        yield return new WaitForSeconds(0.01F);
-        if (gameObject != null) {
-            Rigidbody rigidbody = gameObject.AddComponent<Rigidbody>() as Rigidbody;
-            rigidbody.useGravity = true;
-        }
-    }
 }

@@ -23,7 +23,7 @@ public class InputListener : MonoBehaviour {
             GameObject selectedGameObject = getSelectedGameObject();
 
             if (selectedGameObject != null) {
-                objectSlicer.sliceSelectedGameObjectCombined(selectedGameObject, this.transform.position, 0);
+                objectSlicer.sliceSelectedGameObjectCombined(selectedGameObject, this.transform.position, 0, "Left", "Right", true);
             }
         }
 

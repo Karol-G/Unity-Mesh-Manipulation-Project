@@ -7,15 +7,18 @@ public class AxeCut : MonoBehaviour {
     private ObjectSlicer objectSlicer;
     private SlicerAngle slicerAngle;
     private GameObjectCombiner gameObjectCombiner;
+    private ComponentHandler componentHandler;
+    private HiddenTriangleRemover hiddenTriangleRemover = new HiddenTriangleRemover();
     private float cuttingAngle;
     private float cuttingWidth = 0.05F;
-    private float cuttingDepth = 0.2F;
+    private float cuttingDepth = 0.4F;
 
     // Use this for initialization
     void Start() {
         objectSlicer = this.GetComponent<ObjectSlicer>();
         slicerAngle = GetComponent<SlicerAngle>();
         gameObjectCombiner = GameObject.Find("Controller").GetComponent<GameObjectCombiner>();
+        componentHandler = GameObject.Find("Controller").GetComponent<ComponentHandler>();
         cuttingAngle = calculateCuttingAngle(cuttingDepth, cuttingWidth);
     }
 
@@ -25,20 +28,21 @@ public class AxeCut : MonoBehaviour {
     }
 
     public void doAxeCut(GameObject selectedGameObject) {
-        GameObject root = objectSlicer.sliceSelectedGameObjectCombined(selectedGameObject, getSlicerPlanePosition(cuttingWidth / 2), -cuttingAngle, false);
-        root = objectSlicer.sliceSelectedGameObjectCombined(root, getSlicerPlanePosition(-cuttingWidth / 2), cuttingAngle, false);
+        GameObject root = objectSlicer.sliceSelectedGameObjectCombined(selectedGameObject, getSlicerPlanePosition(0), 0, "Left", "Right", true, false);
+        List<GameObject> rightGameObjects = getAllLeafChildren(root.transform.Find(root.name + " RH").gameObject);
+        List<GameObject> leftGameObjects = getAllLeafChildren(root.transform.Find(root.name + " LH").gameObject);        
+        root = objectSlicer.sliceSelectedGameObjectCombined(rightGameObjects, getSlicerPlanePosition(cuttingWidth / 2), -cuttingAngle, "Left", "Right", true, false);
+        root = objectSlicer.sliceSelectedGameObjectCombined(leftGameObjects, getSlicerPlanePosition(-cuttingWidth / 2), cuttingAngle, "Left", "Right", true, false);
         List<GameObject> leafChildren = getAllLeafChildren(root);
         List<GameObject> tempLeafChildren = new List<GameObject>(leafChildren);
+        List<GameObject> wasteList = (findWaste(leafChildren, new string[] { "Right", "Left" }));
 
-        foreach (GameObject leafChild in leafChildren) {
-            if (isGameObjectWaste(leafChild, new string[] {"Right", "Left"})) {
-                tempLeafChildren.Remove(leafChild);
-                destroyGameObject(leafChild);                
-            }
+        foreach (GameObject waste in wasteList) {
+            tempLeafChildren.Remove(waste);
+            destroyGameObject(waste);
         }
 
         handleUnconnectedGameObjects(tempLeafChildren);
-        //objectSlicer.addRigidbodyToGameObjectDelayed(root);
     }
 
     private Vector3 getSlicerPlanePosition(float offset) {
@@ -58,6 +62,18 @@ public class AxeCut : MonoBehaviour {
         return 90 - Mathf.Atan(cuttingDepth / (cuttingWidth / 2)) * Mathf.Rad2Deg;
     }
 
+    private List<GameObject> findWaste(List<GameObject> gameObjectList, string[] tags) {
+        List<GameObject> wasteList = new List<GameObject>();
+
+        foreach (GameObject gameObject in gameObjectList) {
+            if (isGameObjectWaste(gameObject, tags)) {
+                wasteList.Add(gameObject);
+            }
+        }
+
+        return wasteList;
+    }
+
     private bool isGameObjectWaste(GameObject gameObject, string[] tags) {
         List<string> tagList = gameObject.GetComponent<GameObjectAttributes>().getTagList();
 
@@ -68,7 +84,6 @@ public class AxeCut : MonoBehaviour {
         }
 
         return true;
-        //return tagList[tagList.Count - 1].Equals("Right") && tagList[tagList.Count - 2].Equals("Left");
     }
 
     private void handleUnconnectedGameObjects(List<GameObject> gameObjectList) {
@@ -107,7 +122,7 @@ public class AxeCut : MonoBehaviour {
             index++;
         }
 
-        printIslands(gameObjectIslands);
+        //printIslands(gameObjectIslands);
 
         return gameObjectIslands;
     }
@@ -131,11 +146,11 @@ public class AxeCut : MonoBehaviour {
                     gameObject.transform.parent = newRoot.transform;
                 }
 
-                objectSlicer.addRigidbodyToGameObjectDelayed(newRoot);
+                componentHandler.addRigidbodyToGameObjectDelayed(newRoot);
             }
         }
         else {
-            objectSlicer.addRigidbodyToGameObjectDelayed(root);
+            componentHandler.addRigidbodyToGameObjectDelayed(root);
         }
 
         //combineMainIsland(gameObjectIslands);
@@ -183,9 +198,11 @@ public class AxeCut : MonoBehaviour {
     }
 
     private void combineMainIsland(List<List<GameObject>> gameObjectIslands) {
+        print("Combined");
         List<GameObject> mainIsland = getMainIsland(gameObjectIslands);
-        GameObject combinedGameObject = gameObjectCombiner.combineGameObjects(mainIsland.ToArray(), true);
-        objectSlicer.addMeshColliderToGameObjectDelayed(combinedGameObject);
+        //hiddenTriangleRemover.removeHiddenTriangles(mainIsland.ToArray());
+        GameObject combinedGameObject = gameObjectCombiner.combineGameObjects(mainIsland.ToArray());
+        componentHandler.addMeshColliderToGameObjectDelayed(combinedGameObject);        
     }
 
     private List<GameObject> getMainIsland(List<List<GameObject>> gameObjectIslands) {

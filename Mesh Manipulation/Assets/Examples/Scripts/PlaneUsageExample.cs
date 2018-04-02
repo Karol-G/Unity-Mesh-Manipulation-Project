@@ -18,12 +18,12 @@ public class PlaneUsageExample : MonoBehaviour {
 	 * GameObject. We use the GameObject this script is attached to define the position
 	 * and direction of our cutting Plane. Results are then returned to the user.
 	 */
-	public SlicedHull SliceObject(GameObject obj) {
+	public SlicedHull SliceObject(GameObject obj, bool genCrossSection = true) {
         EzySlice.Plane cuttingPlane = ComputePlaneAgainst(obj);
 
 		// finally, slice the object and return the results. SlicedHull will have all the mesh
 		// details which the application can use to do whatever it wants to do
-		return Slicer.Slice(obj, cuttingPlane);
+		return Slicer.Slice(obj, cuttingPlane, genCrossSection);
 	}
 
     /**
